@@ -1,107 +1,104 @@
 <template>
-  <div class="container" @click="clickHandle('test click', $event)">
-
-    <div class="userinfo" @click="bindViewTap">
-      <img class="userinfo-avatar" v-if="userInfo.avatarUrl" :src="userInfo.avatarUrl" background-size="cover" />
-      <div class="userinfo-nickname">
-        <card :text="userInfo.nickName"></card>
-      </div>
-    </div>
-
-    <div class="usermotto">
-      <div class="user-motto">
-        <card :text="motto"></card>
-      </div>
-    </div>
-
-    <form class="form-container">
-      <input type="text" class="form-control" v-model="motto" placeholder="v-model" />
-      <input type="text" class="form-control" v-model.lazy="motto" placeholder="v-model.lazy" />
-    </form>
-    <a href="/pages/counter/main" class="counter">去往Vuex示例页面</a>
+  <div>
+    <image src="../../assets/bg.jpeg"></image>
+    <button type="primary" @click="uploadBgPic">上传背景图</button>
+    <button type="primary" @click="uploadEmbedPic">上传嵌入图</button>
+    <button @click="confirm">确定</button>
   </div>
 </template>
 
+
 <script>
-import card from '@/components/card'
-
-export default {
-  data () {
-    return {
-      motto: 'Hello World',
-      userInfo: {}
-    }
-  },
-
-  components: {
-    card
-  },
-
-  methods: {
-    bindViewTap () {
-      const url = '../logs/main'
-      wx.navigateTo({ url })
+  export default {
+    data () {
+      return {
+        bgPic: '',
+        embedPic: '',
+      }
     },
-    getUserInfo () {
-      // 调用登录接口
-      wx.login({
-        success: () => {
-          wx.getUserInfo({
-            success: (res) => {
-              this.userInfo = res.userInfo
-              console.log(this.userInfo);
-              
+    methods: {
+      uploadBgPic () {
+        wx.chooseImage({
+          count: 1,
+          success: (res) => {
+            wx.showToast({
+              title: '成功',
+              icon: 'success',
+              duration: 2000
+            })
+            console.log(res.tempFilePaths);
+            this.bgImg = res.tempFilePaths;
+          },
+          fail () {
+
+          }
+        })
+      },
+      uploadEmbedPic () {
+        wx.chooseImage({
+          count: 1,
+          success: (res) => {
+            wx.showToast({
+              title: '成功',
+              icon: 'success',
+              duration: 2000
+            })
+            console.log(res.tempFilePaths);
+            this.embedPic = res.tempFilePaths;
+          },
+          fail () {
+
+          }
+        })
+      },
+      confirm () {
+        wx.request({
+          url: 'https://aips.vbig.org/api/task',
+          method: 'GET',
+          header: {
+            'x-token': {
+              uid: '12345',
             }
-          })
-        }
-      })
-    },
-    clickHandle (msg, ev) {
-      console.log('clickHandle:', msg, ev)
-    }
-  },
+          },
+          data: {
+            taskType: 'FastStyle',
+            styleImage: this.getBase64Image(this.bgPic),
+            contentImage: this.getBase64Image(this.embedPic),
+            quality: 80,
+            vip: 100,
+          },
+          success: (res) => {
+            if (res.data.success) {
+              let code = res.data.queryCode;
+              console.log('code');
+              console.log(code);
+            }
+          }
 
-  created () {
-    // 调用应用实例的方法获取全局数据
-    this.getUserInfo()
+        })
+      },
+      getBase64Image(imgSrc) {
+        let canvas = document.createElement("canvas");
+        let img = new Image();
+        img.src = imgSrc;
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          let ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+
+          let dataURL = canvas.toDataURL("image/png");
+          return dataURL
+        }
+        
+
+      }
+    },
   }
-}
 </script>
 
-<style scoped>
-.userinfo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
-.userinfo-avatar {
-  width: 128rpx;
-  height: 128rpx;
-  margin: 20rpx;
-  border-radius: 50%;
-}
+<style lang="less" scoped>
 
-.userinfo-nickname {
-  color: #aaa;
-}
-
-.usermotto {
-  margin-top: 150px;
-}
-
-.form-control {
-  display: block;
-  padding: 0 12px;
-  margin-bottom: 5px;
-  border: 1px solid #ccc;
-}
-
-.counter {
-  display: inline-block;
-  margin: 10px auto;
-  padding: 5px 10px;
-  color: blue;
-  border: 1px solid blue;
-}
 </style>
