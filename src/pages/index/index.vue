@@ -1,6 +1,6 @@
 <template>
   <div>
-    <image src="../../assets/bg.jpeg"></image>
+    <!-- <image src="../../assets/bg.jpeg"></image> -->
     <button type="primary" @click="uploadBgPic">上传背景图</button>
     <button type="primary" @click="uploadEmbedPic">上传嵌入图</button>
     <button @click="confirm">确定</button>
@@ -16,6 +16,10 @@
         embedPic: '',
       }
     },
+    mounted () {
+      console.log(wx);
+      this.getList();
+    },
     methods: {
       uploadBgPic () {
         wx.chooseImage({
@@ -27,7 +31,7 @@
               duration: 2000
             })
             console.log(res.tempFilePaths);
-            this.bgImg = res.tempFilePaths;
+            this.bgImg = res.tempFilePaths[0];
           },
           fail () {
 
@@ -44,10 +48,24 @@
               duration: 2000
             })
             console.log(res.tempFilePaths);
-            this.embedPic = res.tempFilePaths;
+            this.embedPic = res.tempFilePaths[0];
+            this.getBase64Image(this.embedPic)
           },
           fail () {
 
+          }
+        })
+      },
+      getList () {
+        wx.request({
+          url: 'https://aips.vbig.org/api/taskes-waiting',
+          header: {
+            'x-token': {
+              uid: '1'
+            }
+          },
+          success: (res) => {
+            console.log(res);
           }
         })
       },
@@ -70,29 +88,88 @@
           success: (res) => {
             if (res.data.success) {
               let code = res.data.queryCode;
+              let delayTime = res.data.waiting;
               console.log('code');
               console.log(code);
+              this.getResult(code, delayTime);
             }
           }
 
         })
       },
       getBase64Image(imgSrc) {
-        let canvas = document.createElement("canvas");
-        let img = new Image();
-        img.src = imgSrc;
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
+        wx.request({
+          url: imgSrc,
+          method:'GET',
+          responseType: 'arraybuffer',
+          success:(res) => {
+            console.log(res);
+            
+            let base64 = wx.arrayBufferToBase64(res);
+            base64　= 'data:image/jpeg;base64,' + base64;
+            // $this.data.userImageBase64 = 'data:image/jpg;base64,' + base64;
+            console.log(base64);
+            
+          }
+        });
+        // wx.getImageInfo({
+        //   src: imgSrc,
+        //   success: res => {
+        //     console.log('load img success');
+        //     console.log(res);
+        //     console.log(imgSrc);
+            
+        //     let width = res.width;
+        //     let height = res.height;
+        //     let canvas = wx.createCanvasContext('canvas')
 
-          let ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, img.width, img.height);
+        //     canvas.drawImage(imgSrc, 0, 0, width, height) // 1. 绘制图片至canvas
+        //     // 绘制完成后执行回调
+        //     canvas.draw(false, () => {
+        //       // 2. 获取图像数据
+        //       console.log(12345);
+              
+        //       wx.canvasGetImageData({
+        //         canvasId: 'canvas',
+        //         x: 0,
+        //         y: 0,
+        //         width: width,
+        //         height: height,
+        //         success(res) {
+        //           console.log('canvas success');
+                  
+        //           // 3. png编码
+        //           let pngData = upng.encode([res.data.buffer], res.width, res.height)
+        //           // 4. base64编码
+        //           let base64 = wx.arrayBufferToBase64(pngData)
+        //           console.log(base64)
+        //           // ...
+        //         }
+        //       })
+        //     })
+        //   }
+        // })
 
-          let dataURL = canvas.toDataURL("image/png");
-          return dataURL
-        }
         
 
+      },
+      getResult (queryCode, delayTime) {
+        setTimeout( () => {
+          wx.request({
+            url: `https://aips.vbig.org/api/task-result/${queryCode}`,
+            method: 'GET',
+            headers: {
+              'x-token': {
+                uid: '12345'
+              }
+            },
+            success: (res) => {
+              console.log('get success');
+              console.log(res);
+              
+            }
+          })
+        }, delayTime * 1000)
       }
     },
   }

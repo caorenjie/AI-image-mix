@@ -1,4 +1,4 @@
-# mpvue-demo
+# my-project
 
 > A Mpvue project
 
