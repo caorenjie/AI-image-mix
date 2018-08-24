@@ -10,7 +10,7 @@
 	"miniprogramRoot": "./dist/",
 	"compileType": "miniprogram",
 	"appid": "wxe42046ffd7944685",
-	"projectname": "my-project",
+	"projectname": "AI-image-mix",
 	"condition": {
 		"search": {
 			"current": -1,
