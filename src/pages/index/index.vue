@@ -3,7 +3,7 @@
     <!-- <image src="../../assets/bg.jpeg"></image> -->
     <button type="primary" @click="uploadBgPic">上传背景图</button>
     <button type="primary" @click="uploadEmbedPic">上传嵌入图</button>
-    <button @click="confirm">确定</button>
+    <i-button type="primary" @click="confirm">确定</i-button>
   </div>
 </template>
 
